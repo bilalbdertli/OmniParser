@@ -86,6 +86,47 @@ def hsl_to_rgb(h, s, l):
     b = 255 * hue_to_rgb(p, q, h - 1/3)
     return r, g, b
 
+
+# Preset configurations for text sizes
+# @spaces.GPU
+# Adjust these values as needed
+# @torch.inference_mode()
+text_size_presets = {
+# @torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+    "XS": {
+        "text_scale_mult": 0.8,    # original ~0.8 * box_overlay_ratio
+        "text_thickness_mult": 2,  # max(int(2 * box_overlay_ratio), 1)
+        "text_padding_mult": 3,    # max(int(3 * box_overlay_ratio), 1)
+        "thickness_mult": 3        # max(int(3 * box_overlay_ratio), 1)
+    },
+    "S": {
+        "text_scale_mult": 1.5,  
+        "text_thickness_mult": 2,
+        "text_padding_mult": 5,  
+        "thickness_mult": 5      
+    },
+    "M": {
+        "text_scale_mult": 2,  
+        "text_thickness_mult": 3,
+        "text_padding_mult": 8,
+        "thickness_mult": 8
+    },
+    "L": {
+        "text_scale_mult": 3,
+        "text_thickness_mult": 3,
+        "text_padding_mult": 10,
+        "thickness_mult": 10
+    },
+    "XL": {
+        "text_scale_mult": 4,   # your custom large
+        "text_thickness_mult": 4,
+        "text_padding_mult": 15,
+        "thickness_mult": 15
+    }
+}
+
+
+
 MARKDOWN = """
 # OmniParser for Pure Vision Based General GUI Agent 🔥
 <div>
@@ -109,7 +150,8 @@ def process(
     use_paddleocr,
     imgsz,
     bounding_box_hex,
-    text_hex
+    text_hex,
+    text_size_choice
 ) -> Optional[Image.Image]:
     # Convert hex to RGB
     bounding_box_rgb = color_to_rgb(bounding_box_hex)
@@ -118,14 +160,21 @@ def process(
     image_input.save(image_save_path)
     image = Image.open(image_save_path)
     box_overlay_ratio = image.size[0] / 3200
+    # Get the chosen text size preset
+    preset = text_size_presets[text_size_choice]
+
+    text_scale = preset["text_scale_mult"] * box_overlay_ratio
+    text_thickness = max(int(preset["text_thickness_mult"] * box_overlay_ratio), 1)
+    text_padding = max(int(preset["text_padding_mult"] * box_overlay_ratio), 1)
+    thickness = max(int(preset["thickness_mult"] * box_overlay_ratio), 1)
+
     draw_bbox_config = {
-        'text_scale': 4 * box_overlay_ratio,  # Increased text scale
-        'text_thickness': max(int(4 * box_overlay_ratio), 2),  # Increased text thickness
-        'text_padding': max(int(15 * box_overlay_ratio), 5),  # Increased text padding
-        'thickness': max(int(15 * box_overlay_ratio), 5),  # Increased border thickness
+        'text_scale': text_scale,
+        'text_thickness': text_thickness,
+        'text_padding': text_padding,
+        'thickness': thickness,
         'bounding_box_color': bounding_box_rgb,
         'text_color_rgb': text_rgb
-        
     }
     # import pdb; pdb.set_trace()
 
@@ -163,6 +212,12 @@ with gr.Blocks() as demo:
                 text_color_component = gr.ColorPicker(
                     label='Text Color', value='#FFFFFF'
                 )
+            # New text size option
+            text_size_component = gr.Radio(
+                choices=["XS", "S", "M", "L", "XL"],
+                value="M",
+                label="Text Size Preset"
+            )
             submit_button_component = gr.Button(
                 value='Submit', variant='primary')
         with gr.Column():
@@ -178,7 +233,8 @@ with gr.Blocks() as demo:
             use_paddleocr_component,
             imgsz_component,
             bounding_box_color_component,
-            text_color_component
+            text_color_component,
+            text_size_component
         ],
         outputs=[image_output_component, text_output_component]
     )
