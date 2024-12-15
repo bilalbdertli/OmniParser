@@ -1,0 +1,18 @@
+draw_bbox_config = {
+        'text_scale': 0.8 * box_overlay_ratio,
+        'text_thickness': max(int(2 * box_overlay_ratio), 1),
+        'text_padding': max(int(3 * box_overlay_ratio), 1),
+        'thickness': max(int(3 * box_overlay_ratio), 1),
+}
+
+
+
+draw_bbox_config = {
+        'text_scale': 4 * box_overlay_ratio,  # Increased text scale
+        'text_thickness': max(int(4 * box_overlay_ratio), 2),  # Increased text thickness
+        'text_padding': max(int(15 * box_overlay_ratio), 5),  # Increased text padding
+        'thickness': max(int(15 * box_overlay_ratio), 5),  # Increased border thickness
+        'bounding_box_color': bounding_box_rgb,
+        'text_color_rgb': text_rgb
+     
+}

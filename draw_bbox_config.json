@@ -1,0 +1,13 @@
+{
+    "text_scale_multiplier": 4,
+    "text_thickness_multiplier": 4,
+    "text_thickness_secondary": 2,
+    "text_padding_multiplier": 15,
+    "text_padding_secondary": 5,
+    "thickness_multiplier": 15,
+    "thickness_secondary": 5,
+    "bounding_box_color": [0, 0, 0],
+    "text_color": [255, 255, 255]
+}
+
+

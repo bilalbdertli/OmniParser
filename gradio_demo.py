@@ -7,7 +7,7 @@ from PIL import Image
 import io
 
 
-import base64, os
+import base64, os, json
 from utils import check_ocr_box, get_yolo_model, get_caption_model_processor, get_som_labeled_img
 import torch
 from PIL import Image
@@ -108,24 +108,26 @@ def process(
     iou_threshold,
     use_paddleocr,
     imgsz,
-    bounding_box_hex,
-    text_hex
 ) -> Optional[Image.Image]:
     # Convert hex to RGB
-    bounding_box_rgb = color_to_rgb(bounding_box_hex)
-    text_rgb = color_to_rgb(text_hex)
     image_save_path = 'imgs/saved_image_demo.png'
     image_input.save(image_save_path)
     image = Image.open(image_save_path)
     box_overlay_ratio = image.size[0] / 3200
+     # Read configuration from JSON
+    with open('draw_bbox_config.json', 'r') as f:
+        config = json.load(f)
+    text_scale = config["text_scale_multiplier"] * box_overlay_ratio
+    text_thickness = max(int(config["text_thickness_multiplier"] * box_overlay_ratio),config["text_thickness_secondary"])
+    text_padding = max(int(config["text_padding_multiplier"] * box_overlay_ratio), config["text_padding_secondary"])
+    thickness = max(int(config["thickness_multiplier"] * box_overlay_ratio), config["thickness_secondary"])
     draw_bbox_config = {
-        'text_scale': 4 * box_overlay_ratio,  # Increased text scale
-        'text_thickness': max(int(4 * box_overlay_ratio), 2),  # Increased text thickness
-        'text_padding': max(int(15 * box_overlay_ratio), 5),  # Increased text padding
-        'thickness': max(int(15 * box_overlay_ratio), 5),  # Increased border thickness
-        'bounding_box_color': bounding_box_rgb,
-        'text_color_rgb': text_rgb
-        
+        'text_scale':text_scale,
+        'text_thickness': text_thickness,
+        'text_padding': text_padding, 
+        'thickness': thickness,
+        'bounding_box_color': config["bounding_box_color"],
+        'text_color_rgb': config["text_color"]
     }
     # import pdb; pdb.set_trace()
 
@@ -156,13 +158,6 @@ with gr.Blocks() as demo:
                 label='Use PaddleOCR', value=True)
             imgsz_component = gr.Slider(
                 label='Icon Detect Image Size', minimum=640, maximum=1920, step=32, value=640)
-            with gr.Row():
-                bounding_box_color_component = gr.ColorPicker(
-                    label='Bounding Box Color', value='#000000'
-                )
-                text_color_component = gr.ColorPicker(
-                    label='Text Color', value='#FFFFFF'
-                )
             submit_button_component = gr.Button(
                 value='Submit', variant='primary')
         with gr.Column():
@@ -177,8 +172,6 @@ with gr.Blocks() as demo:
             iou_threshold_component,
             use_paddleocr_component,
             imgsz_component,
-            bounding_box_color_component,
-            text_color_component
         ],
         outputs=[image_output_component, text_output_component]
     )
