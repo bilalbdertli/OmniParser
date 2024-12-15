@@ -41,7 +41,7 @@ import re
 from torchvision.transforms import ToPILImage
 import supervision as sv
 import torchvision.transforms as T
-
+from supervision.draw.color import Color
 
 def get_caption_model_processor(model_name, model_name_or_path="Salesforce/blip2-opt-2.7b", device=None):
     if not device:
@@ -228,7 +228,7 @@ def load_image(image_path: str) -> Tuple[np.array, torch.Tensor]:
 
 
 def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor, phrases: List[str], text_scale: float, 
-             text_padding=5, text_thickness=2, thickness=3) -> np.ndarray:
+             text_padding=5, text_thickness=2, thickness=3, bounding_box_color=(0,0,0), text_color_rgb=(255,255,255)) -> np.ndarray:
     """    
     This function annotates an image with bounding boxes and labels.
 
@@ -250,8 +250,11 @@ def annotate(image_source: np.ndarray, boxes: torch.Tensor, logits: torch.Tensor
 
     labels = [f"{phrase}" for phrase in range(boxes.shape[0])]
 
+    # Convert from RGB to BGR
+    bounding_box_bgr = (bounding_box_color[2], bounding_box_color[1], bounding_box_color[0])
+    text_bgr = (text_color_rgb[2], text_color_rgb[1], text_color_rgb[0])
     from util.box_annotator import BoxAnnotator 
-    box_annotator = BoxAnnotator(text_scale=text_scale, text_padding=text_padding,text_thickness=text_thickness,thickness=thickness) # 0.8 for mobile/web, 0.3 for desktop # 0.4 for mind2web
+    box_annotator = BoxAnnotator(color=Color(*bounding_box_bgr),text_color=Color(*text_bgr), text_scale=text_scale, text_padding=text_padding,text_thickness=text_thickness,thickness=thickness) # 0.8 for mobile/web, 0.3 for desktop # 0.4 for mind2web
     annotated_frame = image_source.copy()
     annotated_frame = box_annotator.annotate(scene=annotated_frame, detections=detections, labels=labels, image_size=(w,h))
 

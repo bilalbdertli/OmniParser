@@ -145,9 +145,7 @@ class BoxAnnotator:
                 thickness=cv2.FILLED,
             )
             # import pdb; pdb.set_trace()
-            box_color = color.as_rgb()
-            luminance = 0.299 * box_color[0] + 0.587 * box_color[1] + 0.114 * box_color[2]
-            text_color = (0,0,0) if luminance > 160 else (255,255,255)
+            text_color = self.text_color.as_rgb()
             cv2.putText(
                 img=scene,
                 text=text,
